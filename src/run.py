@@ -10,16 +10,34 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-from .engine import (
-    coverage,
-    failure_point,
-    gap_and_flag,
-    load_assets,
-    load_portfolios,
-    portfolio_yield,
-    same_day_available,
-    validate_weights,
-)
+if __package__ in (None, ""):
+    # Executed as a script (e.g. right-click Run in an IDE).
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[1]))
+    from src.engine import (
+        coverage,
+        failure_point,
+        gap_and_flag,
+        load_assets,
+        load_portfolios,
+        portfolio_yield,
+        same_day_available,
+        validate_weights,
+    )
+else:
+    # Executed as a module: python -m src.run
+    from .engine import (
+        coverage,
+        failure_point,
+        gap_and_flag,
+        load_assets,
+        load_portfolios,
+        portfolio_yield,
+        same_day_available,
+        validate_weights,
+    )
 
 SHOCK_RATES = (0.20, 0.40, 0.60, 0.80, 1.00)
 RULE = "baseline"
