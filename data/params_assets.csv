@@ -1,0 +1,5 @@
+asset_id,asset_name_cn,same_day_ratio,settle_days,stress_haircut,annual_yield,source,note
+cash,现金,1.00,0,0.00,0.000,团队假设,现金当日可用
+deposit_3m,三个月内银行存款,0.80,1,0.00,0.000,团队假设,扩展情形使用
+gov_bond_1y,一年内政府债券,0.60,1,0.00,0.000,团队假设；待对照 CMU 结算周期核实,扩展情形使用
+reverse_repo,隔夜逆回购,0.95,0,0.00,0.000,团队假设,扩展情形使用

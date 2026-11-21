@@ -1,0 +1,7 @@
+portfolio_id,portfolio_name,asset_id,weight
+A,保守,cash,0.80
+A,保守,gov_bond_1y,0.20
+B,中性,cash,0.50
+B,中性,gov_bond_1y,0.50
+C,收益导向,cash,0.20
+C,收益导向,gov_bond_1y,0.80
