@@ -43,6 +43,7 @@ One row per (portfolio, shock rate, rule).
 | `rule` | string | Redemption rule: `fcfs` or `pro_rata` | — |
 | `same_day_available` | float | Liquidity available on the day | same unit as circulation |
 | `coverage_ratio` | float | Coverage = same-day available / redemption requests | — |
+| `on_time_rate` | float | Share of requested value settled within the day, capped at 1.0 | — |
 | `gap` | float | Shortfall when coverage is below 100% | same unit as circulation |
 | `failure_flag` | int | 1 if coverage is below 100%, otherwise 0 | — |
 | `portfolio_yield` | float | Portfolio annualised yield | decimal |
@@ -66,6 +67,7 @@ and `sigma = 0.25`.
 | `coverage_p95` | float | 95th percentile of coverage |
 | `failure_prob` | float | Share of draws with coverage below 100% |
 | `gap_mean` | float | Mean shortfall across draws |
+| `on_time_mean` | float | Mean on-time redemption rate across draws |
 
 ## Mapping to the Basel III LCR
 

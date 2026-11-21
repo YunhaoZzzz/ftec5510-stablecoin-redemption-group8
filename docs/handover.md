@@ -29,6 +29,7 @@ Written for the second developer taking over `src/` after the baseline engine is
 | `rule` | Redemption rule. Currently `baseline`; the rules module will add `fcfs` and `pro_rata` |
 | `same_day_available` | Same-day realisable amount, as a share of circulation |
 | `coverage_ratio` | `same_day_available / shock_rate` |
+| `on_time_rate` | `min(1, coverage_ratio)`; the share of requested value settled within the day |
 | `gap` | `max(0, shock_rate - same_day_available)` |
 | `failure_flag` | 1 when coverage is below 100% |
 | `portfolio_yield` | Weighted annualised yield of the portfolio |
@@ -111,6 +112,7 @@ Work in this order. Detailed requirements are in `docs/work_division.md`.
 | `rule` | 兑付规则。目前是 `baseline`，规则模块会加入 `fcfs` 与 `pro_rata` |
 | `same_day_available` | 同日可变现金额，占流通量的比例 |
 | `coverage_ratio` | `same_day_available / shock_rate` |
+| `on_time_rate` | `min(1, coverage_ratio)`，即当日完成兑付的比例 |
 | `gap` | `max(0, shock_rate - same_day_available)` |
 | `failure_flag` | 覆盖率低于 100% 时为 1 |
 | `portfolio_yield` | 组合加权年化收益率 |

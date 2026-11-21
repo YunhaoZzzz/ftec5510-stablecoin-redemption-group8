@@ -23,6 +23,7 @@ if __package__ in (None, ""):
         load_assets,
         load_portfolios,
         monte_carlo,
+        on_time_rate,
         portfolio_yield,
         same_day_available,
         validate_weights,
@@ -36,6 +37,7 @@ else:
         load_assets,
         load_portfolios,
         monte_carlo,
+        on_time_rate,
         portfolio_yield,
         same_day_available,
         validate_weights,
@@ -52,6 +54,7 @@ FIELDS = [
     "rule",
     "same_day_available",
     "coverage_ratio",
+    "on_time_rate",
     "gap",
     "failure_flag",
     "portfolio_yield",
@@ -67,6 +70,7 @@ MC_FIELDS = [
     "coverage_p95",
     "failure_prob",
     "gap_mean",
+    "on_time_mean",
 ]
 
 
@@ -85,6 +89,7 @@ def build_rows(assets: dict, portfolios: dict) -> list[dict]:
                     "rule": RULE,
                     "same_day_available": f"{available:.4f}",
                     "coverage_ratio": f"{coverage(available, shock):.4f}",
+                    "on_time_rate": f"{on_time_rate(available, shock):.4f}",
                     "gap": f"{gap:.4f}",
                     "failure_flag": flag,
                     "portfolio_yield": f"{annual_yield:.4f}",

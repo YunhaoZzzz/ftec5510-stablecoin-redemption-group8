@@ -84,6 +84,20 @@ def coverage(
     return same_day / requested
 
 
+def on_time_rate(
+    same_day: float, shock_rate: float, circulation: float = CIRCULATION
+) -> float:
+    """Share of requested value settled within the business day.
+
+    Unlike ``coverage``, this is capped at 1.0: paying more than was
+    requested is not "more on time".
+    """
+    requested = shock_rate * circulation
+    if requested <= 0:
+        return 1.0
+    return min(1.0, same_day / requested)
+
+
 def gap_and_flag(
     same_day: float, shock_rate: float, circulation: float = CIRCULATION
 ) -> tuple[float, int]:
@@ -145,6 +159,7 @@ def monte_carlo(
             draws = draw_shock(nominal, sigma, n_runs, rng)
             coverage_draws = available / draws
             gap_draws = np.maximum(0.0, draws - available)
+            on_time_draws = np.minimum(1.0, coverage_draws)
             rows.append(
                 {
                     "portfolio_id": pid,
@@ -157,6 +172,7 @@ def monte_carlo(
                     "coverage_p95": f"{np.percentile(coverage_draws, 95):.4f}",
                     "failure_prob": f"{(coverage_draws < 1.0).mean():.4f}",
                     "gap_mean": f"{gap_draws.mean():.4f}",
+                    "on_time_mean": f"{on_time_draws.mean():.4f}",
                 }
             )
     return rows

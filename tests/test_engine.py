@@ -10,6 +10,7 @@ from src.engine import (
     load_assets,
     load_portfolios,
     monte_carlo,
+    on_time_rate,
     same_day_available,
 )
 
@@ -68,6 +69,21 @@ class BaselineEngineTest(unittest.TestCase):
                 if r["portfolio_id"] == pid
             ]
             self.assertEqual(probs, sorted(probs), msg=pid)
+
+    def test_on_time_rate_is_capped(self):
+        cases = {"A": (0.80, 1.00), "C": (0.80, 0.85)}
+        for pid, (shock, expected) in cases.items():
+            available = same_day_available(
+                self.portfolios[pid]["weights"], self.assets
+            )
+            self.assertAlmostEqual(
+                on_time_rate(available, shock), expected, places=6, msg=pid
+            )
+
+        available_a = same_day_available(
+            self.portfolios["A"]["weights"], self.assets
+        )
+        self.assertAlmostEqual(on_time_rate(available_a, 1.00), 0.92, places=6)
 
 
 if __name__ == "__main__":
