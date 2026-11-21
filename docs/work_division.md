@@ -1,30 +1,31 @@
-# Work Division
+# 需求分工表
 
-Two developers, split by module rather than by chapter.
+两人协作，按模块切分，不按章节切分。
 
-## A — Framework and engine
+## A —— 框架与引擎
 
-| Requirement | Deliverable | Definition of done |
+| 需求 | 交付物 | 完成标准 |
 |---|---|---|
-| Repository and directory structure | This repository | Clones and runs without extra setup |
-| Field contract for the three tables | `docs/data_contract.md` | Field names, meanings and units fixed |
-| Asset parameters and portfolio configuration | `data/params_assets.csv`, `data/portfolios.csv` | Loadable by the code |
-| Asset model and same-day liquidity | `src/engine.py` | Given a portfolio, returns same-day available amount and coverage |
-| Gap and failure point | `src/engine.py` | Given a shock rate, returns the gap and the failure point |
-| End-to-end minimal case | Run output | 80/20 portfolio at 80% shock, verifiable by hand |
-| CLI entry point | `src/run.py` | Runs with no arguments |
-| Handover note | `docs/handover.md` | B can continue independently |
+| 仓库与目录结构 | 本仓库 | clone 后可直接安装运行 |
+| 四张表的字段契约 | `docs/data_contract.md` | 字段名、含义、单位定稿 |
+| 资产参数与组合配置 | `data/params_assets.csv`、`data/portfolios.csv` | 能被代码读入 |
+| 资产模型与同日流动性 | `src/engine.py` | 给定组合能算出同日可用金额与覆盖率 |
+| 缺口与失败点 | `src/engine.py` | 给定冲击率能输出缺口与失败点 |
+| 蒙特卡洛 | `src/engine.py` | 每个情景 1000 次抽样，输出失败概率与分位数 |
+| 端到端最小案例 | 运行输出 | 80/20 组合在 80% 冲击下结果可手算复核 |
+| 命令行入口 | `src/run.py` | 右键即可运行，或 `python -m src.run` |
+| 交接说明 | `docs/handover.md` | 接手方能独立往下做 |
 
-After these items are complete, `src/` is handed over to B.
+A 完成以上内容后，`src/` 交由 B 维护。
 
-## B — Rules and presentation
+## B —— 规则与呈现
 
-| Requirement | Deliverable | Definition of done |
+| 需求 | 交付物 | 完成标准 |
 |---|---|---|
-| Redemption rules | `src/rules.py` | One result each for `fcfs` and `pro_rata` |
-| Batch run | `outputs/results.csv` | Covers 3 portfolios × 5 shock rates × 2 rules |
-| Portfolio yield | Same file | Weighted sum of asset yields |
-| Charts | `outputs/` | Portfolio comparison, failure-point curve, trade-off frontier |
-| Parameter source review | `data/params_assets.csv` | Every parameter has a source or an explicit assumption note |
-| README and run instructions | `README.md` | A new member can follow it and run |
-| (Optional) Streamlit page | `app.py` | Adjust parameters and see charts update |
+| 兑付规则 | `src/rules.py` | `fcfs` 与 `pro_rata` 各出一个结果 |
+| 批量运行 | `outputs/results.csv` | 覆盖 3 组组合 × 5 档冲击 × 2 种规则，共 30 行 |
+| 组合收益率 | 同上 | 权重 × 年化收益率加权求和 |
+| 图表 | `outputs/` | 组合对照、失败点曲线、收益率—流动性前沿 |
+| 参数来源核对 | `data/params_assets.csv` | 每个参数都有来源或明确标注为假设 |
+| README 与运行说明 | `README.md` | 新成员能照做跑通 |
+| （选做）Streamlit 页面 | `app.py` | 可调参数并实时出图 |

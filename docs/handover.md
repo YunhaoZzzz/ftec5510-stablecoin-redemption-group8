@@ -1,95 +1,6 @@
-# Handover Note / 交接说明
+# 交接说明
 
-> English version first, Chinese version follows. 英文版在前，中文版在后。
-
----
-
-# English
-
-Written for the second developer taking over `src/` after the baseline engine is complete.
-
-## 1. What each file does
-
-| File | Responsibility |
-|---|---|
-| `data/params_assets.csv` | Asset parameters: same-day realisable share, settlement days, stress haircut, annual yield, source |
-| `data/portfolios.csv` | Portfolio weights, one row per (portfolio, asset) pair |
-| `src/engine.py` | Loading, same-day liquidity, coverage, gap, failure point, Monte Carlo |
-| `src/run.py` | Runs the scenario matrix and writes `outputs/results.csv` |
-| `tests/test_engine.py` | Acceptance tests for the baseline numbers |
-| `outputs/results.csv` | Generated output; not committed (see `.gitignore`) |
-| `outputs/mc_results.csv` | Monte Carlo summary: coverage percentiles and failure probability |
-
-## 2. What the result fields mean
-
-| Field | Meaning |
-|---|---|
-| `portfolio_id` | Portfolio code: A / B / C |
-| `shock_rate` | Redemption shock as a share of circulation |
-| `rule` | Redemption rule. Currently `baseline`; the rules module will add `fcfs` and `pro_rata` |
-| `same_day_available` | Same-day realisable amount, as a share of circulation |
-| `coverage_ratio` | `same_day_available / shock_rate` |
-| `on_time_rate` | `min(1, coverage_ratio)`; the share of requested value settled within the day |
-| `gap` | `max(0, shock_rate - same_day_available)` |
-| `failure_flag` | 1 when coverage is below 100% |
-| `portfolio_yield` | Weighted annualised yield of the portfolio |
-
-A redemption rule changes **who** receives the available liquidity, not the total. The aggregate columns above are therefore already valid and do not need to be recomputed when rules are added.
-
-## 3. How to add an asset class
-
-1. Add a row to `data/params_assets.csv` with a new `asset_id`.
-2. Add its weight to each relevant portfolio in `data/portfolios.csv`.
-3. Make sure the weights still sum to 1 for every portfolio.
-4. Run `python -m src.run` and `python -m unittest discover -s tests -v`.
-
-No code change is needed: the engine sums over whatever assets a portfolio references.
-
-## 4. How to add a redemption rule
-
-1. Create `src/rules.py` with one function per rule.
-2. The function takes the same-day available amount and the list of requests, and returns the allocated amount per holder.
-3. Aggregate the deferred amount by holder type.
-4. Write the rule name into the `rule` column of `outputs/results.csv`.
-5. Add a test asserting that total allocated equals `min(available, total_requests)`.
-
-Suggested first two rules:
-
-- `fcfs`: sort requests by submission time and fill until the available amount is exhausted.
-- `pro_rata`: allocate `available / total_requests` of each request.
-
-## 5. Known limitations
-
-- All amounts are normalised so that circulation equals 1.0.
-- `annual_yield` for `gov_bond_1y` is a placeholder based on the HIBOR 1M fixing; replace it with the 364-day Exchange Fund Bill tender yield when available.
-- Same-day ratios for deposits, bonds and reverse repo are team assumptions, not regulatory values.
-- The model works at the level of one business day; there is no intraday timing yet.
-- `src/rules.py` does not exist yet.
-
-## 6. Commands
-
-```bash
-python -m src.run
-python -m unittest discover -s tests -v
-```
-
-## 7. Next steps for the receiving developer
-
-Work in this order. Detailed requirements are in `docs/work_division.md`.
-
-1. `src/rules.py` — implement `fcfs` and `pro_rata`, and add a test asserting that total allocation equals `min(available, total_requests)`.
-2. Batch run — extend `src/run.py` to loop over both rules; `results.csv` grows from 15 rows to 30.
-3. Charts — three figures: portfolio comparison, failure-point curve, and the yield-liquidity frontier.
-4. Parameter review — replace the placeholder yield for `gov_bond_1y` with the 364-day Exchange Fund Bill tender yield.
-5. (Optional) Streamlit page.
-
-**Ownership.** From this point `src/` belongs to the receiving developer. The handover author should stop committing to `src/` and work on docs and screenshots only.
-
----
-
-# 中文版
-
-本说明写给接手 `src/` 的第二位开发同学。基线引擎已经完成，可以独立往下做。
+本说明写给接手 `src/` 的第二位开发同学。基线引擎与蒙特卡洛已经完成，可以独立往下做。
 
 ## 1. 每个文件负责什么
 
@@ -97,11 +8,11 @@ Work in this order. Detailed requirements are in `docs/work_division.md`.
 |---|---|
 | `data/params_assets.csv` | 资产参数：同日可动用比例、变现结算天数、压力扣减、年化收益率、来源 |
 | `data/portfolios.csv` | 组合权重，一行代表「某组合持有某资产的权重」 |
-| `src/engine.py` | 读取数据、同日流动性、覆盖率、缺口、失败点、蒙特卡洛 |
-| `src/run.py` | 跑情景矩阵，输出 `outputs/results.csv` |
-| `tests/test_engine.py` | 基线数字的验收测试 |
-| `outputs/results.csv` | 生成的结果，不提交到仓库（见 `.gitignore`） |
-| `outputs/mc_results.csv` | 蒙特卡洛汇总：覆盖率分位数与失败概率 |
+| `src/engine.py` | 读取数据、同日流动性、覆盖率、当日完成率、缺口、失败点、蒙特卡洛 |
+| `src/run.py` | 跑情景矩阵，输出 `outputs/results.csv` 与 `outputs/mc_results.csv` |
+| `tests/test_engine.py` | 验收测试，目前 6 个 |
+| `outputs/results.csv` | 确定性结果，不提交到仓库（见 `.gitignore`） |
+| `outputs/mc_results.csv` | 蒙特卡洛汇总：覆盖率分位数、失败概率、当日完成率 |
 
 ## 2. 结果字段的含义
 
@@ -162,7 +73,7 @@ python -m unittest discover -s tests -v
 
 1. `src/rules.py` —— 实现 `fcfs` 与 `pro_rata`，并加一个测试，断言分配总额等于 `min(available, total_requests)`。
 2. 批量运行 —— 扩展 `src/run.py`，循环两种规则；`results.csv` 从 15 行变成 30 行。
-3. 图表 —— 三张图：组合对照、失败点曲线、收益率—流动性前沿。
+3. 图表 —— 三张图：组合对照、失败点曲线、收益率—流动性前沿；另建议加一张失败概率热力图。
 4. 参数复核 —— 把 `gov_bond_1y` 的占位收益率换成 364 天外汇基金票据的中标收益率。
 5. （选做）Streamlit 页面。
 

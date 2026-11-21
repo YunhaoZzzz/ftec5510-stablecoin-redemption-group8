@@ -1,46 +1,47 @@
-# Product Specification
+# 产品表
 
-## What this is
+## 这是什么
 
-A stress-testing tool for comparing the reserve portfolios and redemption rules of stablecoin issuers. It answers one question:
+一个用于比较稳定币发行人储备组合与兑付规则的压力测试工具。它回答一个问题：
 
-> With 100% book reserve coverage, how much can an issuer realise on the same day under different portfolio mixes, and at what redemption pressure does settlement start to fall short?
+> 在账面储备覆盖率 100% 的前提下，不同的储备组合在同日能变现多少？赎回压力到多大时开始兑付不足？
 
-## What it does
+## 它做什么
 
-| Capability | Description |
+| 能力 | 说明 |
 |---|---|
-| Portfolio same-day liquidity | Weights each asset by its realisable share to compute the same-day available amount and coverage |
-| Failure-point analysis | Finds the redemption rate at which coverage falls below 100% |
-| Portfolio comparison | Compares three portfolios with different risk appetites side by side |
-| Rule comparison | First-come-first-served versus pro-rata, comparing the amount deferred |
-| Yield trade-off | Portfolio annualised yield against same-day liquidity, forming a frontier |
+| 组合同日流动性 | 按各资产的可动用比例加权，算出当日可用金额与覆盖率 |
+| 失败点分析 | 找出覆盖率跌破 100% 的赎回冲击率 |
+| 组合对照 | 三组不同风险偏好的储备组合并排比较 |
+| 蒙特卡洛 | 每个情景抽样 1000 次，输出失败概率与覆盖率分位数 |
+| 规则对照 | 先到先得与按比例兑付，比较被延后的金额 |
+| 收益权衡 | 组合年化收益率与同日流动性形成一条权衡前沿 |
 
-## What it does not do
+## 它不做什么
 
-| Not included | Reason |
+| 不做 | 原因 |
 |---|---|
-| Real-time monitoring | Issuer disclosure is weekly; access to real-time data is not assumed |
-| Issuer API integration | The data is not available and it is out of scope |
-| Prediction about a named institution | The tool compares rules and parameters, not institutions |
-| Machine learning or model training | No training data; this is a parameterised simulation |
-| Equity allocation analysis | Equities are not eligible reserve assets |
+| 实时监控 | 发行人对外披露是按周，不假设能拿到实时数据 |
+| 接入发行人 API | 数据不可得，且超出本项目范围 |
+| 预测具名机构的行为 | 只做规则与参数的比较，不对任何具体机构下结论 |
+| 机器学习或模型训练 | 没有训练数据，本项目是参数化仿真 |
+| 股票配置分析 | 股票不属于合格储备资产 |
 
-## Users
+## 使用者
 
-| User | Purpose |
+| 使用者 | 用来做什么 |
 |---|---|
-| Issuer's ALM and risk team | Assess whether the reserve portfolio can meet redemption under stress |
-| Regulatory researchers | Compare how different redemption rules allocate a liquidity shortfall |
+| 发行人的资产负债管理与风险团队 | 评估储备组合在压力下的兑付能力，做预案 |
+| 监管研究者 | 比较不同兑付规则在流动性短缺时的分配后果 |
 
-## Typical workflow
+## 典型使用流程
 
-1. Select a portfolio (A / B / C)
-2. Select a redemption shock (20%–100%)
-3. Select a redemption rule (FCFS / pro rata)
-4. Read the result: same-day available amount, coverage, gap, failure flag
-5. Switch one input and run again to compare
+1. 选择储备组合（A / B / C）
+2. 选择赎回冲击档位（20%–100%）
+3. 选择兑付规则（先到先得 / 按比例）
+4. 读取结果：同日可用金额、覆盖率、当日完成率、缺口、是否失败
+5. 换一个输入再跑一次，作对比
 
-## Boundary statement
+## 边界声明
 
-The tool is based on public regulatory text, public interest rates and team assumptions. It does not represent the actual reserve composition of any named issuer.
+本工具基于公开监管文本、公开利率与团队假设，**不代表任何具名发行人的实际储备配置**。
