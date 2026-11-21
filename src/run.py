@@ -22,6 +22,7 @@ if __package__ in (None, ""):
         gap_and_flag,
         load_assets,
         load_portfolios,
+        monte_carlo,
         portfolio_yield,
         same_day_available,
         validate_weights,
@@ -34,6 +35,7 @@ else:
         gap_and_flag,
         load_assets,
         load_portfolios,
+        monte_carlo,
         portfolio_yield,
         same_day_available,
         validate_weights,
@@ -41,6 +43,9 @@ else:
 
 SHOCK_RATES = (0.20, 0.40, 0.60, 0.80, 1.00)
 RULE = "baseline"
+N_RUNS = 1000
+SIGMA = 0.25
+SEED = 42
 FIELDS = [
     "portfolio_id",
     "shock_rate",
@@ -50,6 +55,18 @@ FIELDS = [
     "gap",
     "failure_flag",
     "portfolio_yield",
+]
+MC_FIELDS = [
+    "portfolio_id",
+    "shock_rate",
+    "n_runs",
+    "sigma",
+    "coverage_mean",
+    "coverage_p05",
+    "coverage_p50",
+    "coverage_p95",
+    "failure_prob",
+    "gap_mean",
 ]
 
 
@@ -90,7 +107,20 @@ def main() -> None:
         writer.writeheader()
         writer.writerows(rows)
 
+    mc_rows = monte_carlo(
+        portfolios, assets, SHOCK_RATES, n_runs=N_RUNS, sigma=SIGMA, seed=SEED
+    )
+    out_mc = root / "outputs" / "mc_results.csv"
+    with open(out_mc, "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=MC_FIELDS)
+        writer.writeheader()
+        writer.writerows(mc_rows)
+
     print(f"Wrote {len(rows)} rows to {out.relative_to(root)}")
+    print(
+        f"Wrote {len(mc_rows)} rows to {out_mc.relative_to(root)} "
+        f"({N_RUNS} runs per scenario, sigma={SIGMA})"
+    )
     print()
     print("Portfolio summary")
     for pid, entry in portfolios.items():
@@ -114,6 +144,18 @@ def main() -> None:
             f"gap {gap:.1%}  "
             f"{'FAIL' if flag else 'ok'}"
         )
+
+    print()
+    print(f"Failure probability (Monte Carlo, {N_RUNS} runs, sigma={SIGMA})")
+    header = "     " + "".join(f"{s:>9.0%}" for s in SHOCK_RATES)
+    print(header)
+    by_key = {(r["portfolio_id"], r["shock_rate"]): r for r in mc_rows}
+    for pid, entry in portfolios.items():
+        cells = "".join(
+            f"{float(by_key[(pid, f'{s:.2f}')]['failure_prob']):>9.0%}"
+            for s in SHOCK_RATES
+        )
+        print(f"{pid}    {cells}")
 
 
 if __name__ == "__main__":

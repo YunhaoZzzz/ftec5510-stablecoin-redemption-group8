@@ -15,6 +15,8 @@ import csv
 from pathlib import Path
 from typing import Dict, Mapping
 
+import numpy as np
+
 CIRCULATION = 1.0
 
 
@@ -111,3 +113,50 @@ def validate_weights(
                 raise KeyError(
                     f"Portfolio {pid!r} references unknown asset {aid!r}"
                 )
+
+
+def draw_shock(nominal: float, sigma: float, size: int, rng) -> np.ndarray:
+    """Draw realised redemption shocks around a nominal level.
+
+    A lognormal draw is used so that shocks stay positive and are
+    right-skewed. The median of the draw equals ``nominal``.
+    """
+    return nominal * rng.lognormal(mean=0.0, sigma=sigma, size=size)
+
+
+def monte_carlo(
+    portfolios: Mapping[str, dict],
+    assets: Mapping[str, dict],
+    shock_rates,
+    n_runs: int = 1000,
+    sigma: float = 0.25,
+    seed: int = 42,
+) -> list[dict]:
+    """Run each (portfolio, nominal shock) pair across ``n_runs`` draws.
+
+    Returns one summary row per pair, with the coverage distribution and
+    the probability that coverage falls below 100%.
+    """
+    rng = np.random.default_rng(seed)
+    rows: list[dict] = []
+    for pid, entry in portfolios.items():
+        available = same_day_available(entry["weights"], assets)
+        for nominal in shock_rates:
+            draws = draw_shock(nominal, sigma, n_runs, rng)
+            coverage_draws = available / draws
+            gap_draws = np.maximum(0.0, draws - available)
+            rows.append(
+                {
+                    "portfolio_id": pid,
+                    "shock_rate": f"{nominal:.2f}",
+                    "n_runs": n_runs,
+                    "sigma": f"{sigma:.2f}",
+                    "coverage_mean": f"{coverage_draws.mean():.4f}",
+                    "coverage_p05": f"{np.percentile(coverage_draws, 5):.4f}",
+                    "coverage_p50": f"{np.percentile(coverage_draws, 50):.4f}",
+                    "coverage_p95": f"{np.percentile(coverage_draws, 95):.4f}",
+                    "failure_prob": f"{(coverage_draws < 1.0).mean():.4f}",
+                    "gap_mean": f"{gap_draws.mean():.4f}",
+                }
+            )
+    return rows

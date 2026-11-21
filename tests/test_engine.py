@@ -9,6 +9,7 @@ from src.engine import (
     gap_and_flag,
     load_assets,
     load_portfolios,
+    monte_carlo,
     same_day_available,
 )
 
@@ -46,6 +47,27 @@ class BaselineEngineTest(unittest.TestCase):
             self.assertEqual(bool(flag), exp_fail, msg=pid)
             if exp_fail:
                 self.assertAlmostEqual(gap, 0.12, places=6, msg=pid)
+
+    def test_monte_carlo_is_reproducible(self):
+        first = monte_carlo(
+            self.portfolios, self.assets, (0.80,), n_runs=200, seed=1
+        )
+        second = monte_carlo(
+            self.portfolios, self.assets, (0.80,), n_runs=200, seed=1
+        )
+        self.assertEqual(first, second)
+
+    def test_failure_probability_rises_with_shock(self):
+        rows = monte_carlo(
+            self.portfolios, self.assets, (0.20, 0.60, 1.00), n_runs=500, seed=7
+        )
+        for pid in self.portfolios:
+            probs = [
+                float(r["failure_prob"])
+                for r in rows
+                if r["portfolio_id"] == pid
+            ]
+            self.assertEqual(probs, sorted(probs), msg=pid)
 
 
 if __name__ == "__main__":

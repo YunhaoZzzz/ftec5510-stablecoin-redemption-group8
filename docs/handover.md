@@ -14,10 +14,11 @@ Written for the second developer taking over `src/` after the baseline engine is
 |---|---|
 | `data/params_assets.csv` | Asset parameters: same-day realisable share, settlement days, stress haircut, annual yield, source |
 | `data/portfolios.csv` | Portfolio weights, one row per (portfolio, asset) pair |
-| `src/engine.py` | Loading, same-day liquidity, coverage, gap, failure point |
+| `src/engine.py` | Loading, same-day liquidity, coverage, gap, failure point, Monte Carlo |
 | `src/run.py` | Runs the scenario matrix and writes `outputs/results.csv` |
 | `tests/test_engine.py` | Acceptance tests for the baseline numbers |
 | `outputs/results.csv` | Generated output; not committed (see `.gitignore`) |
+| `outputs/mc_results.csv` | Monte Carlo summary: coverage percentiles and failure probability |
 
 ## 2. What the result fields mean
 
@@ -95,10 +96,11 @@ Work in this order. Detailed requirements are in `docs/work_division.md`.
 |---|---|
 | `data/params_assets.csv` | 资产参数：同日可动用比例、变现结算天数、压力扣减、年化收益率、来源 |
 | `data/portfolios.csv` | 组合权重，一行代表「某组合持有某资产的权重」 |
-| `src/engine.py` | 读取数据、同日流动性、覆盖率、缺口、失败点 |
+| `src/engine.py` | 读取数据、同日流动性、覆盖率、缺口、失败点、蒙特卡洛 |
 | `src/run.py` | 跑情景矩阵，输出 `outputs/results.csv` |
 | `tests/test_engine.py` | 基线数字的验收测试 |
 | `outputs/results.csv` | 生成的结果，不提交到仓库（见 `.gitignore`） |
+| `outputs/mc_results.csv` | 蒙特卡洛汇总：覆盖率分位数与失败概率 |
 
 ## 2. 结果字段的含义
 

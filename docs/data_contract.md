@@ -47,6 +47,26 @@ One row per (portfolio, shock rate, rule).
 | `failure_flag` | int | 1 if coverage is below 100%, otherwise 0 | — |
 | `portfolio_yield` | float | Portfolio annualised yield | decimal |
 
+## 4. `outputs/mc_results.csv` (generated in step 2)
+
+Monte Carlo summary. One row per (portfolio, nominal shock rate). Each row
+summarises 1000 draws of the realised redemption shock around the nominal
+level, using a lognormal distribution with median equal to the nominal rate
+and `sigma = 0.25`.
+
+| Field | Type | Meaning |
+|---|---|---|
+| `portfolio_id` | string | Portfolio code |
+| `shock_rate` | float | Nominal redemption shock |
+| `n_runs` | int | Number of draws per scenario |
+| `sigma` | float | Standard deviation parameter of the lognormal draw |
+| `coverage_mean` | float | Mean coverage across draws |
+| `coverage_p05` | float | 5th percentile of coverage |
+| `coverage_p50` | float | Median coverage |
+| `coverage_p95` | float | 95th percentile of coverage |
+| `failure_prob` | float | Share of draws with coverage below 100% |
+| `gap_mean` | float | Mean shortfall across draws |
+
 ## Mapping to the Basel III LCR
 
 | This project | Basel III LCR |
