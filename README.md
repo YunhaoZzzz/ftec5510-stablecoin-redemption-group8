@@ -45,7 +45,7 @@ python -m src.run
 |---|---|
 | `data/` | 资产参数表、组合配置表 |
 | `src/` | 模型代码 |
-| `docs/` | 数据契约、需求分工表、产品表 |
+| `docs/` | Data contract, work division, product spec |
 | `outputs/` | 运行结果与图表（不提交到仓库） |
 
 ## 数据来源
