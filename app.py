@@ -143,7 +143,7 @@ allocation_df = pd.DataFrame({
     "SD 后延迟": [request - paid for request, paid in zip(requests, allocations)],
 })
 st.subheader("同日请求分配")
-st.dataframe(allocation_df.style.format("{:.1%}", subset=allocation_df.columns[1:]), hide_index=True, use_container_width=True)
+st.dataframe(allocation_df.style.format("{:.1%}", subset=allocation_df.columns[1:]), hide_index=True, width="stretch")
 st.caption("分配规则作用于 SD 同日可用金额。SD 后延迟的请求仍可能由 T+1 资金在一个工作日内结算。H1/H2/H3 是模拟持有人，不代表真实用户数据。")
 
 shocks = np.linspace(0.05, 1.20, 24)
@@ -171,13 +171,13 @@ with chart_cols[0]:
 with chart_cols[1]:
     st.subheader("收益率—同日流动性")
     fig, ax = plt.subplots(figsize=(6.5, 4.2))
-    for row in summary_rows:
+    for pid, row in zip(portfolio_ids, summary_rows):
         x = row["同日可用"] * 100
         y = row["假设年化收益"] * 100
         ax.scatter(x, y, s=90)
-        ax.annotate(row["组合"], (x, y), xytext=(6, 6), textcoords="offset points", fontsize=8)
-    ax.set_xlabel("SD 同日可变现比例 (%)")
-    ax.set_ylabel("假设年化收益 (%)")
+        ax.annotate(f"Demo {pid}", (x, y), xytext=(6, 6), textcoords="offset points", fontsize=8)
+    ax.set_xlabel("Same-day liquidity (% of circulation)")
+    ax.set_ylabel("Assumed annual yield (%)")
     ax.grid(alpha=0.25)
     st.pyplot(fig, width="stretch")
     plt.close(fig)
