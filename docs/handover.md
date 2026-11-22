@@ -78,3 +78,40 @@ python -m unittest discover -s tests -v
 5. （选做）Streamlit 页面。
 
 **归属**：从这一刻起 `src/` 归接手方维护。交接人不再向 `src/` 提交，只负责文档与截图。
+
+## 8. 与《Reserve Portfolio Design》的差异（优先处理）
+
+`Reserve_Portfolio_Design_Group8.docx` 是储备组合的支撑报告。它规定的是**组合怎么设计**，不是分配规则的回测——分配规则在第 5 节只作为正交维度被提及一次。
+
+当前代码只实现了这份报告的一小部分，两者有四处实质差异：
+
+| 项目 | 支撑报告 | 当前代码 |
+|---|---|---|
+| 组合数量 | 5 组（A–E） | 3 组（A–C） |
+| 资产类别 | 9 类 | 4 类 |
+| 参数情形 | central / conservative / optimistic | 只有一套 |
+| 流动性阶梯 | SD / T+1 / later 三档 | 只有同日比例 |
+| on-time 口径 | SD + T+1 累计 | 仅同日 |
+| 冲击档位 | 5 / 20 / 50 / 80 | 20 / 40 / 60 / 80 / 100 |
+
+### 最需要先处理的一处：on-time 的口径
+
+指引第 3.3.3 段要求「收到请求后的一个工作日内处理」。今天收到的请求，最晚可以在下一个工作日完成结算。
+
+支撑报告据此把当日可兑付能力定义为 **SD + T+1 累计**（见表 4 的 "T+1 cumulative (on-time ceiling)"），而当前代码只用了同日比例。
+
+也就是说，**现在的模型偏严格**——它假设所有兑付都必须在当天完成。改过来之后，同样组合的覆盖率会变高。
+
+### 建议的改动顺序
+
+1. `data/params_assets.csv`：扩到支撑报告表 2 的 9 类资产，每类加入 `next_day_ratio` 与 `later_ratio`，并按 central / conservative / optimistic 三套取值。
+2. `data/portfolios.csv`：换成支撑报告表 3 的五组权重（A–E）。
+3. `src/engine.py`：新增 `on_time_available = Σ w × (same_day_ratio + next_day_ratio)`，原 `same_day_available` 保留做诊断指标。
+4. `src/run.py`：在情景矩阵中增加「参数情形」维度，并改为循环三个 case。
+5. `tests/test_engine.py`：92 / 80 / 68 这些断言会全部失效，按新口径重算。
+
+### 一个提醒
+
+改完之后，现在文档和截图里的 92% / 80% / 68%、失败概率矩阵、收益率数值**全部会变**。这是口径变化导致的，不是算出错。
+
+如果时间只够做一处，就做第 3 步（on-time 口径）。其余三项是数据层面的事，可以后补；但口径不改，报告里的表 4 和 demo 的结论会对不上。
