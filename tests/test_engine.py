@@ -11,8 +11,10 @@ from src.engine import (
     load_portfolios,
     monte_carlo,
     on_time_rate,
+    on_time_available,
     same_day_available,
 )
+from src.rules import allocate_fcfs, allocate_pro_rata
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -31,23 +33,22 @@ class BaselineEngineTest(unittest.TestCase):
 
     def test_failure_point(self):
         for pid, entry in self.portfolios.items():
-            available = same_day_available(entry["weights"], self.assets)
+            available = on_time_available(entry["weights"], self.assets)
             self.assertAlmostEqual(
                 failure_point(available), available, places=6, msg=pid
             )
 
     def test_coverage_at_eighty_percent(self):
-        cases = {"A": (1.15, False), "B": (1.00, False), "C": (0.85, True)}
+        cases = {"A": (1.25, False), "B": (1.25, False), "C": (1.25, False)}
         for pid, (exp_cov, exp_fail) in cases.items():
-            available = same_day_available(
+            available = on_time_available(
                 self.portfolios[pid]["weights"], self.assets
             )
             cov = coverage(available, 0.80)
             gap, flag = gap_and_flag(available, 0.80)
             self.assertAlmostEqual(cov, exp_cov, places=6, msg=pid)
             self.assertEqual(bool(flag), exp_fail, msg=pid)
-            if exp_fail:
-                self.assertAlmostEqual(gap, 0.12, places=6, msg=pid)
+            self.assertAlmostEqual(gap, 0.0, places=6, msg=pid)
 
     def test_monte_carlo_is_reproducible(self):
         first = monte_carlo(
@@ -71,19 +72,38 @@ class BaselineEngineTest(unittest.TestCase):
             self.assertEqual(probs, sorted(probs), msg=pid)
 
     def test_on_time_rate_is_capped(self):
-        cases = {"A": (0.80, 1.00), "C": (0.80, 0.85)}
+        cases = {"A": (0.80, 1.00), "C": (0.80, 1.00)}
         for pid, (shock, expected) in cases.items():
-            available = same_day_available(
+            available = on_time_available(
                 self.portfolios[pid]["weights"], self.assets
             )
             self.assertAlmostEqual(
                 on_time_rate(available, shock), expected, places=6, msg=pid
             )
 
-        available_a = same_day_available(
+        available_a = on_time_available(
             self.portfolios["A"]["weights"], self.assets
         )
-        self.assertAlmostEqual(on_time_rate(available_a, 1.00), 0.92, places=6)
+        self.assertAlmostEqual(on_time_rate(available_a, 1.00), 1.00, places=6)
+
+    def test_on_time_capacity_adds_same_day_and_next_day(self):
+        for pid in self.portfolios:
+            available = on_time_available(self.portfolios[pid]["weights"], self.assets)
+            self.assertAlmostEqual(available, 1.0, places=6, msg=pid)
+
+
+class RedemptionRulesTest(unittest.TestCase):
+    def test_both_rules_allocate_minimum_of_capacity_and_requests(self):
+        requests = [0.5, 0.3, 0.2]
+        for rule in (allocate_fcfs, allocate_pro_rata):
+            for available in (0.0, 0.4, 1.5):
+                paid = rule(available, requests)
+                self.assertAlmostEqual(sum(paid), min(available, sum(requests)))
+
+    def test_rules_have_distinct_allocations_when_capacity_is_short(self):
+        self.assertEqual(allocate_fcfs(0.4, [0.5, 0.3, 0.2]), [0.4, 0.0, 0.0])
+        for paid, request in zip(allocate_pro_rata(0.4, [0.5, 0.3, 0.2]), [0.5, 0.3, 0.2]):
+            self.assertAlmostEqual(paid / request, 0.4)
 
 
 if __name__ == "__main__":

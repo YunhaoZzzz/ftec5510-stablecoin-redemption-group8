@@ -1,9 +1,7 @@
 """Core engine for the stablecoin T+1 redemption resilience demo.
 
-The model follows the weighting logic of the Basel III Liquidity Coverage
-Ratio: each reserve asset is converted into a same-day realisable amount by a
-liquidity factor, and the result is compared with the redemption requests
-arriving on the same day.
+The model converts reserve assets into same-day and cumulative SD + T+1
+realisable amounts, then compares those amounts with redemption requests.
 
 All amounts are expressed as a share of outstanding circulation, so a
 portfolio with 100% book coverage has reserves equal to ``CIRCULATION``.
@@ -28,6 +26,7 @@ def load_assets(path: str | Path) -> Dict[str, dict]:
             assets[row["asset_id"]] = {
                 "asset_name_cn": row["asset_name_cn"],
                 "same_day_ratio": float(row["same_day_ratio"]),
+                "next_day_ratio": float(row.get("next_day_ratio", 0) or 0),
                 "settle_days": int(float(row["settle_days"])),
                 "stress_haircut": float(row["stress_haircut"]),
                 "annual_yield": float(row["annual_yield"]),
@@ -65,6 +64,25 @@ def same_day_available(
     return total * circulation
 
 
+def on_time_available(
+    weights: Mapping[str, float],
+    assets: Mapping[str, dict],
+    circulation: float = CIRCULATION,
+) -> float:
+    """Cumulative same-day plus next-business-day realisable amount."""
+    total = sum(
+        weight
+        * max(
+            0.0,
+            min(1.0, asset["same_day_ratio"] + asset.get("next_day_ratio", 0.0))
+            - asset["stress_haircut"],
+        )
+        for aid, weight in weights.items()
+        for asset in (assets[aid],)
+    )
+    return total * circulation
+
+
 def portfolio_yield(
     weights: Mapping[str, float], assets: Mapping[str, dict]
 ) -> float:
@@ -75,19 +93,19 @@ def portfolio_yield(
 
 
 def coverage(
-    same_day: float, shock_rate: float, circulation: float = CIRCULATION
+    available: float, shock_rate: float, circulation: float = CIRCULATION
 ) -> float:
-    """Share of same-day redemption requests that can be met."""
+    """Requests covered by the supplied liquidity amount per shock unit."""
     requested = shock_rate * circulation
     if requested <= 0:
         return float("inf")
-    return same_day / requested
+    return available / requested
 
 
 def on_time_rate(
-    same_day: float, shock_rate: float, circulation: float = CIRCULATION
+    on_time: float, shock_rate: float, circulation: float = CIRCULATION
 ) -> float:
-    """Share of requested value settled within the business day.
+    """Share of requested value settled by the end of the next business day.
 
     Unlike ``coverage``, this is capped at 1.0: paying more than was
     requested is not "more on time".
@@ -95,21 +113,21 @@ def on_time_rate(
     requested = shock_rate * circulation
     if requested <= 0:
         return 1.0
-    return min(1.0, same_day / requested)
+    return min(1.0, on_time / requested)
 
 
 def gap_and_flag(
-    same_day: float, shock_rate: float, circulation: float = CIRCULATION
+    available: float, shock_rate: float, circulation: float = CIRCULATION
 ) -> tuple[float, int]:
-    """Return ``(gap, failure_flag)`` for one shock level."""
+    """Return the SD+T+1 shortfall and breach flag for one shock level."""
     requested = shock_rate * circulation
-    gap = max(0.0, requested - same_day)
+    gap = max(0.0, requested - available)
     return gap, int(gap > 1e-12)
 
 
-def failure_point(same_day: float, circulation: float = CIRCULATION) -> float:
-    """Redemption rate at which coverage falls to 100%."""
-    return same_day / circulation
+def failure_point(on_time: float, circulation: float = CIRCULATION) -> float:
+    """Redemption rate at which SD+T+1 coverage falls to 100%."""
+    return on_time / circulation
 
 
 def validate_weights(
@@ -154,7 +172,7 @@ def monte_carlo(
     rng = np.random.default_rng(seed)
     rows: list[dict] = []
     for pid, entry in portfolios.items():
-        available = same_day_available(entry["weights"], assets)
+        available = on_time_available(entry["weights"], assets)
         for nominal in shock_rates:
             draws = draw_shock(nominal, sigma, n_runs, rng)
             coverage_draws = available / draws

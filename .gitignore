@@ -8,6 +8,4 @@ venv/
 .vscode/
 .DS_Store
 *.log
-outputs/*
-!outputs/.gitkeep
 FTEC5510_Group8_Demo实施方案与进度计划_1121.docx

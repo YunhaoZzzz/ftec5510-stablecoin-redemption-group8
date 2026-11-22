@@ -1,9 +1,4 @@
-"""Run the baseline scenario matrix and write ``outputs/results.csv``.
-
-This stage covers the portfolio-level aggregates: same-day available
-amount, coverage, gap and failure flag. Redemption rules are added later;
-the ``rule`` column is therefore written as ``baseline`` for now.
-"""
+"""Run the demo portfolio matrix for both allocation rules."""
 
 from __future__ import annotations
 
@@ -24,6 +19,7 @@ if __package__ in (None, ""):
         load_portfolios,
         monte_carlo,
         on_time_rate,
+        on_time_available,
         portfolio_yield,
         same_day_available,
         validate_weights,
@@ -38,13 +34,14 @@ else:
         load_portfolios,
         monte_carlo,
         on_time_rate,
+        on_time_available,
         portfolio_yield,
         same_day_available,
         validate_weights,
     )
 
 SHOCK_RATES = (0.20, 0.40, 0.60, 0.80, 1.00)
-RULE = "baseline"
+RULES = ("fcfs", "pro_rata")
 N_RUNS = 1000
 SIGMA = 0.25
 SEED = 42
@@ -53,12 +50,14 @@ FIELDS = [
     "shock_rate",
     "rule",
     "same_day_available",
+    "on_time_available",
     "coverage_ratio",
     "on_time_rate",
     "gap",
     "failure_flag",
     "portfolio_yield",
 ]
+ALLOCATION_FIELDS = ["portfolio_id", "shock_rate", "rule", "holder_id", "requested", "same_day_allocated", "deferred_after_sd"]
 MC_FIELDS = [
     "portfolio_id",
     "shock_rate",
@@ -75,27 +74,43 @@ MC_FIELDS = [
 
 
 def build_rows(assets: dict, portfolios: dict) -> list[dict]:
-    """Build one row per (portfolio, shock rate)."""
+    """Build one row per (portfolio, shock rate, allocation rule)."""
+    try:
+        from .rules import allocate
+    except ImportError:
+        from src.rules import allocate
     rows: list[dict] = []
+    allocation_rows: list[dict] = []
     for pid, entry in portfolios.items():
-        available = same_day_available(entry["weights"], assets)
+        same_day = same_day_available(entry["weights"], assets)
+        available = on_time_available(entry["weights"], assets)
         annual_yield = portfolio_yield(entry["weights"], assets)
         for shock in SHOCK_RATES:
             gap, flag = gap_and_flag(available, shock)
-            rows.append(
-                {
+            requests = [shock * share for share in (0.50, 0.30, 0.20)]
+            for rule in RULES:
+                # Allocation rules act on today's liquidity; remaining requests
+                # may still be settled from the T+1 ladder within the on-time window.
+                allocations = allocate(rule, same_day, requests)
+                rows.append({
                     "portfolio_id": pid,
                     "shock_rate": f"{shock:.2f}",
-                    "rule": RULE,
-                    "same_day_available": f"{available:.4f}",
+                    "rule": rule,
+                    "same_day_available": f"{same_day:.4f}",
+                    "on_time_available": f"{available:.4f}",
                     "coverage_ratio": f"{coverage(available, shock):.4f}",
                     "on_time_rate": f"{on_time_rate(available, shock):.4f}",
                     "gap": f"{gap:.4f}",
                     "failure_flag": flag,
                     "portfolio_yield": f"{annual_yield:.4f}",
-                }
-            )
-    return rows
+                })
+                for index, (request, paid) in enumerate(zip(requests, allocations), 1):
+                    allocation_rows.append({
+                        "portfolio_id": pid, "shock_rate": f"{shock:.2f}", "rule": rule,
+                        "holder_id": f"H{index}", "requested": f"{request:.4f}",
+                        "same_day_allocated": f"{paid:.4f}", "deferred_after_sd": f"{request-paid:.4f}",
+                    })
+    return rows, allocation_rows
 
 
 def main() -> None:
@@ -104,20 +119,25 @@ def main() -> None:
     portfolios = load_portfolios(root / "data" / "portfolios.csv")
     validate_weights(portfolios, assets)
 
-    rows = build_rows(assets, portfolios)
+    rows, allocation_rows = build_rows(assets, portfolios)
     out = root / "outputs" / "results.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=FIELDS)
+        writer = csv.DictWriter(fh, fieldnames=FIELDS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
+
+    with open(root / "outputs" / "allocation_results.csv", "w", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=ALLOCATION_FIELDS, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(allocation_rows)
 
     mc_rows = monte_carlo(
         portfolios, assets, SHOCK_RATES, n_runs=N_RUNS, sigma=SIGMA, seed=SEED
     )
     out_mc = root / "outputs" / "mc_results.csv"
     with open(out_mc, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=MC_FIELDS)
+        writer = csv.DictWriter(fh, fieldnames=MC_FIELDS, lineterminator="\n")
         writer.writeheader()
         writer.writerows(mc_rows)
 
@@ -126,21 +146,22 @@ def main() -> None:
         f"Wrote {len(mc_rows)} rows to {out_mc.relative_to(root)} "
         f"({N_RUNS} runs per scenario, sigma={SIGMA})"
     )
+    print(f"Wrote {len(allocation_rows)} holder allocations to outputs/allocation_results.csv")
     print()
     print("Portfolio summary")
     for pid, entry in portfolios.items():
-        available = same_day_available(entry["weights"], assets)
+        available = on_time_available(entry["weights"], assets)
         annual_yield = portfolio_yield(entry["weights"], assets)
         print(
             f"{pid}  {entry['name']}  "
-            f"same-day {available:.1%}  "
+            f"on-time ceiling {available:.1%}  "
             f"failure at {failure_point(available):.1%}  "
             f"yield {annual_yield:.2%}"
         )
     print()
     print("At a 80% redemption shock")
     for pid, entry in portfolios.items():
-        available = same_day_available(entry["weights"], assets)
+        available = on_time_available(entry["weights"], assets)
         cov = coverage(available, 0.80)
         gap, flag = gap_and_flag(available, 0.80)
         print(

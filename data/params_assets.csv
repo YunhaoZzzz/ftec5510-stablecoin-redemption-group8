@@ -1,5 +1,5 @@
-asset_id,asset_name_cn,same_day_ratio,settle_days,stress_haircut,annual_yield,source,note
-cash,现金,1.00,0,0.00,0.0000,Cash earns no interest (market convention),Cash is fully available same day
-deposit_3m,三个月内银行存款,0.80,1,0.00,0.0271,HKMA API: HIBOR 1M fixing 2.71167% on 2026-11-20,Short-term deposit proxy; used only in extended runs
-gov_bond_1y,一年内政府债券,0.60,1,0.00,0.0271,Placeholder = HIBOR 1M on 2026-11-20; replace with 364-day EFB tender yield,Same-day ratio is a team assumption pending CMU settlement check
-reverse_repo,隔夜逆回购,0.95,0,0.00,0.0238,HKMA API: HIBOR overnight 2.38% on 2026-11-20,Overnight tenor; used only in extended runs
+asset_id,asset_name_cn,same_day_ratio,next_day_ratio,settle_days,stress_haircut,annual_yield,source,note
+cash,现金,1.00,0.00,0,0.00,0.0000,Cash earns no interest (market convention),Cash is fully available same day
+deposit_3m,三个月内银行存款,0.80,0.20,1,0.00,0.0271,Same-day/T+1 ladder is a team assumption; yield proxy: HIBOR 1M fixing 2.71167% on 2026-11-20,Remaining 20% assumed realisable by next business day
+gov_bond_1y,一年内政府债券,0.60,0.40,1,0.00,0.0271,Same-day/T+1 ladder is a team assumption; yield placeholder: HIBOR 1M on 2026-11-20,Remaining 40% assumed settled by next business day; yield should be replaced with 364-day EFB tender yield
+reverse_repo,隔夜逆回购,0.95,0.05,0,0.00,0.0238,Same-day/T+1 ladder is a team assumption; yield proxy: HIBOR overnight 2.38% on 2026-11-20,Remaining 5% assumed available by next business day
