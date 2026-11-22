@@ -59,7 +59,7 @@
 ## 5. 已知限制
 
 - 所有金额都按流通量等于 1.0 做归一化。
-- `gov_bond_1y` 的年化收益率是基于 HIBOR 1M 的占位值，拿到 364 天外汇基金票据中标收益率后应替换。
+- `gov_bond_1y` 的年化收益率已替换为 HKMA 2026-11-17 招标、Y2697（364 天）外汇基金票据的平均中标收益率 3.31% p.a.；来源与代理说明见 `data/params_assets.csv`。
 - 存款、债券与逆回购的同日可动用比例都是团队假设，不是监管规定。
 - 模型以一个工作日为单位，暂时没有日内时序。
 - 当前 demo 的 T+1 ladder 是团队假设：存款与一年内国债的未变现部分假设在 T+1 到账；隔夜逆回购剩余部分假设最迟在下一个工作日到账。详见 `data/params_assets.csv`。
@@ -72,6 +72,12 @@ python -m src.run
 python -m unittest discover -s tests -v
 ```
 
+Streamlit 页面（先安装 `requirements-app.txt`）：
+
+```bash
+streamlit run app.py
+```
+
 ## 7. 接手后的执行顺序
 
 按这个顺序做。详细要求见 `docs/work_division.md`。
@@ -79,8 +85,8 @@ python -m unittest discover -s tests -v
 1. `src/rules.py` —— 已实现并测试 `fcfs` 与 `pro_rata`，断言分配总额等于 `min(available, total_requests)`。
 2. 批量运行 —— 已覆盖三组合 × 五档冲击 × 两种规则，共 30 行；持有人分配明细另存为 90 行。
 3. 图表 —— 已生成组合流动性对照、SD 与 SD+T+1 完成率曲线、收益率—同日流动性图，以及蒙特卡洛失败概率热力图。
-4. 参数复核 —— 把 `gov_bond_1y` 的占位收益率换成 364 天外汇基金票据的中标收益率。
-5. （选做）Streamlit 页面。
+4. 参数复核 —— 已换成 2026-11-17 Y2697 364 天外汇基金票据平均中标收益率（3.31% p.a.）。
+5. （选做）Streamlit 页面 —— 已新增 `app.py`，可编辑参数和组合权重并即时查看结果；依赖见 `requirements-app.txt`。
 
 **归属**：从这一刻起 `src/` 归接手方维护。交接人不再向 `src/` 提交，只负责文档与截图。
 
