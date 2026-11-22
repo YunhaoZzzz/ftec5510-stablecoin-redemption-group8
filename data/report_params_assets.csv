@@ -1,0 +1,28 @@
+case,asset_id,asset_name_cn,eligible,annual_yield,same_day_ratio,next_day_ratio,later_ratio,source,note
+central,cash,现金,1,0.010,1.00,0.00,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+central,bank_deposit_3m,三个月内银行存款,1,0.032,0.70,0.30,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+central,treasury_bill_1y,一年内国库券,1,0.036,0.50,0.40,0.10,Reserve Portfolio Design Group8 Table 2,Report assumption
+central,overnight_reverse_repo,隔夜逆回购,1,0.033,0.90,0.10,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+central,term_reverse_repo_90d,三个月内定期逆回购,1,0.035,0.00,0.50,0.50,Reserve Portfolio Design Group8 Table 2,Report assumption
+central,dedicated_mmf,专属货币市场基金,1,0.035,0.30,0.50,0.20,Reserve Portfolio Design Group8 Table 2,Eligible assets only
+central,government_bond_1_3y,一至三年期政府债券,0,0.040,0.10,0.20,0.70,Reserve Portfolio Design Group8 Table 2,Not eligible under report assumption
+central,gold,黄金,0,0.000,0.00,0.10,0.90,Reserve Portfolio Design Group8 Table 2,Counterfactual only
+central,secured_loan,有抵押贷款,0,0.060,0.00,0.00,1.00,Reserve Portfolio Design Group8 Table 2,Counterfactual only
+conservative,cash,现金,1,0.010,1.00,0.00,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+conservative,bank_deposit_3m,三个月内银行存款,1,0.032,0.50,0.40,0.10,Reserve Portfolio Design Group8 Table 2,Report assumption
+conservative,treasury_bill_1y,一年内国库券,1,0.036,0.30,0.40,0.30,Reserve Portfolio Design Group8 Table 2,Report assumption
+conservative,overnight_reverse_repo,隔夜逆回购,1,0.033,0.80,0.20,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+conservative,term_reverse_repo_90d,三个月内定期逆回购,1,0.035,0.00,0.30,0.70,Reserve Portfolio Design Group8 Table 2,Report assumption
+conservative,dedicated_mmf,专属货币市场基金,1,0.035,0.15,0.35,0.50,Reserve Portfolio Design Group8 Table 2,Eligible assets only
+conservative,government_bond_1_3y,一至三年期政府债券,0,0.040,0.05,0.10,0.85,Reserve Portfolio Design Group8 Table 2,Not eligible under report assumption
+conservative,gold,黄金,0,0.000,0.00,0.00,1.00,Reserve Portfolio Design Group8 Table 2,Counterfactual only
+conservative,secured_loan,有抵押贷款,0,0.060,0.00,0.00,1.00,Reserve Portfolio Design Group8 Table 2,Counterfactual only
+optimistic,cash,现金,1,0.010,1.00,0.00,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+optimistic,bank_deposit_3m,三个月内银行存款,1,0.032,0.90,0.10,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+optimistic,treasury_bill_1y,一年内国库券,1,0.036,0.70,0.25,0.05,Reserve Portfolio Design Group8 Table 2,Report assumption
+optimistic,overnight_reverse_repo,隔夜逆回购,1,0.033,1.00,0.00,0.00,Reserve Portfolio Design Group8 Table 2,Report assumption
+optimistic,term_reverse_repo_90d,三个月内定期逆回购,1,0.035,0.00,0.70,0.30,Reserve Portfolio Design Group8 Table 2,Report assumption
+optimistic,dedicated_mmf,专属货币市场基金,1,0.035,0.50,0.40,0.10,Reserve Portfolio Design Group8 Table 2,Eligible assets only
+optimistic,government_bond_1_3y,一至三年期政府债券,0,0.040,0.20,0.30,0.50,Reserve Portfolio Design Group8 Table 2,Not eligible under report assumption
+optimistic,gold,黄金,0,0.000,0.00,0.20,0.80,Reserve Portfolio Design Group8 Table 2,Counterfactual only
+optimistic,secured_loan,有抵押贷款,0,0.060,0.00,0.00,1.00,Reserve Portfolio Design Group8 Table 2,Counterfactual only

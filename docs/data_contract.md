@@ -82,3 +82,27 @@
 | 主体为持牌稳定币发行人 | 主体为银行 |
 
 本项目的加权思路与 LCR 有相似处，但时间窗口、参数及主体均不同，不直接自称 LCR。
+
+## 5. 报告专用输入与输出（A–E）
+
+报告模型和 demo 使用不同文件，避免相同的 A/B/C 代码产生歧义。
+
+### `data/report_params_assets.csv`
+
+每行是一个「参数情形 × 资产」组合，共 central / conservative / optimistic 三种情形、九类资产。`annual_yield` 为小数；`same_day_ratio`、`next_day_ratio`、`later_ratio` 均为 0–1 比例，三者之和必须为 1。`eligible` 是报告的资格假设（1 合规，0 不合规或仅作反事实）。报告未提供压力折扣，此模型不加折扣。
+
+### `data/report_portfolios.csv`
+
+报告 A–E 持仓权重；字段形式与 demo 权重表相同，但 ID 只在报告模型中解释。每个组合权重合计为 1。不要把本表替代 `data/portfolios.csv`。
+
+### 报告输出
+
+| 文件 | 内容 |
+|---|---|
+| `outputs/report_portfolio_summary.csv` | 五个组合的表 4 主要汇总值及是否匹配标记 |
+| `outputs/report_table4_comparison.csv` | 表 4 每项报告值、复算值、差异及报告精度匹配标记 |
+| `outputs/report_scenario_results.csv` | 3 情形 × 5 组合 × 4 冲击档位的确定性结果；金额比例以流通量为基准 |
+| `outputs/report_mc_results.csv` | 同一情景网格的蒙特卡洛汇总；每格 1,000 次，固定种子 42、sigma=0.25 |
+| `outputs/report_portfolio_liquidity.png` | 报告 A–E central 与 conservative 流动性、收益率图 |
+
+使用 `python -m src.run_report` 生成 CSV，再用 `python -m src.plot_report_results` 生成图。该模型的失败概率仍是设定分布下的模拟结果，不是实际违约概率。

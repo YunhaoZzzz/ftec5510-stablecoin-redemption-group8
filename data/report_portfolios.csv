@@ -1,0 +1,23 @@
+portfolio_id,portfolio_name,asset_id,weight
+A,A Conservative (PYUSD-like),cash,0.40
+A,A Conservative (PYUSD-like),bank_deposit_3m,0.30
+A,A Conservative (PYUSD-like),treasury_bill_1y,0.10
+A,A Conservative (PYUSD-like),overnight_reverse_repo,0.20
+B,B Balanced (HKMA baseline),cash,0.20
+B,B Balanced (HKMA baseline),bank_deposit_3m,0.40
+B,B Balanced (HKMA baseline),treasury_bill_1y,0.30
+B,B Balanced (HKMA baseline),overnight_reverse_repo,0.10
+C,C Yield-focused (USDC-like),cash,0.12
+C,C Yield-focused (USDC-like),dedicated_mmf,0.88
+D,D Treasury-heavy (USDT-like eligible only),cash,0.05
+D,D Treasury-heavy (USDT-like eligible only),bank_deposit_3m,0.10
+D,D Treasury-heavy (USDT-like eligible only),treasury_bill_1y,0.65
+D,D Treasury-heavy (USDT-like eligible only),overnight_reverse_repo,0.15
+D,D Treasury-heavy (USDT-like eligible only),dedicated_mmf,0.05
+E,E Counterfactual non-eligible assets,cash,0.05
+E,E Counterfactual non-eligible assets,treasury_bill_1y,0.40
+E,E Counterfactual non-eligible assets,overnight_reverse_repo,0.10
+E,E Counterfactual non-eligible assets,term_reverse_repo_90d,0.05
+E,E Counterfactual non-eligible assets,dedicated_mmf,0.10
+E,E Counterfactual non-eligible assets,government_bond_1_3y,0.20
+E,E Counterfactual non-eligible assets,secured_loan,0.10

@@ -90,39 +90,28 @@ streamlit run app.py
 
 **归属**：从这一刻起 `src/` 归接手方维护。交接人不再向 `src/` 提交，只负责文档与截图。
 
-## 8. 与《Reserve Portfolio Design》的差异（优先处理）
+## 8. 与《Reserve Portfolio Design》的差异及报告复现
 
-`Reserve_Portfolio_Design_Group8.docx` 是储备组合的支撑报告。它规定的是**组合怎么设计**，不是分配规则的回测——分配规则在第 5 节只作为正交维度被提及一次。
+《Reserve Portfolio Design》定义组合配置和储备流动性假设；兑付规则回测只是正交分析维度。报告 A–E 与 demo A/B/C **不是同一套组合**，必须分别使用独立输入文件：demo 为 `data/portfolios.csv` + `data/params_assets.csv`；报告为 `data/report_portfolios.csv` + `data/report_params_assets.csv`。
 
-当前代码只实现了这份报告的一小部分，两者有四处实质差异：
+### 当前状态
 
-| 项目 | 支撑报告 | 当前代码 |
+| 项目 | 报告设计 | 当前实现 |
 |---|---|---|
-| 组合数量 | 5 组（A–E） | 3 组（A–C） |
-| 资产类别 | 9 类 | 4 类 |
-| 参数情形 | central / conservative / optimistic | 只有一套 |
-| 流动性阶梯 | SD / T+1 / later 三档，三套情形 | demo 输入 SD / T+1 两档、单套假设 |
-| on-time 口径 | SD + T+1 累计 | SD + T+1 累计（新增） |
-| 冲击档位 | 5 / 20 / 50 / 80 | 20 / 40 / 60 / 80 / 100 |
+| 组合 | A–E | A–E 独立建模，demo A/B/C 保持原样 |
+| 资产 | 9 类 | 9 类，逐情形录入 |
+| 参数情形 | central / conservative / optimistic | 三套情形 |
+| 流动性阶梯 | SD / T+1 / later | 三档比例，逐资产每个情形合计 100% |
+| on-time | SD + T+1 cumulative | 报告复现和 demo 引擎均按 SD+T+1 统计 |
+| 情景冲击 | 5 / 20 / 50 / 80% | 60 个确定性结果 + 60 个 MC 汇总结果 |
+| Table 4 | 五组合汇总比较 | 45 个数值/分类字段逐项核对，五组合均匹配报告精度 |
 
-### 最需要先处理的一处：on-time 的口径
+### 复算结论与假设
 
-指引第 3.3.3 段要求「收到请求后的一个工作日内处理」。今天收到的请求，最晚可以在下一个工作日完成结算。
+- `src/run_report.py` 读取报告专用输入，生成表 4 汇总及逐项比较、三情形情景结果和 Monte Carlo 汇总；`src/plot_report_results.py` 生成报告组合图。
+- Table 4 的现金占比、收益率、Central 的 SD/T+1/later、Conservative 的 SD/T+1、资格分类均匹配。D 的 Conservative SD 按报告精度为 42.3%（底层复算值 42.25%）。
+- Conservative failure point 在报告中是约数，复现采用 5 个百分点档位；E 的 T+1 累计值 52.5% 对应报告所列约 50%。该近似口径已单独标明，不应当作精确计算值。
+- Table 2 未给出压力折扣，所以报告模型不另加压力折扣；利率和流动性梯度均是报告假设，不是实测参数。E 含不合规资产，仅作为反事实对照。
+- 运行：`python -m src.run_report`，然后 `python -m src.plot_report_results`。详见 `docs/data_contract.md`。
 
-支撑报告据此把一工作日内可兑付能力定义为 **SD + T+1 累计**（见表 4 的 "T+1 cumulative (on-time ceiling)"）。当前引擎已按此口径处理 on-time rate、coverage、gap、failure point 和 Monte Carlo；同日金额仍作为诊断字段单独输出。
-
-demo 原参数没有 T+1 ladder，因此新增的未变现部分是团队假设，见 `data/params_assets.csv`，不是从报告表 2 直接导入。按当前假设，demo A/B/C 的 SD+T+1 ceiling 均为 100%；报告 A–E 的表 4 结果不会与 demo 直接对应。
-
-### 建议的改动顺序
-
-1. `data/params_assets.csv`：已为现有四类 demo 资产增加 `next_day_ratio`；未移植报告中的九类资产和三套参数情形。
-2. `data/portfolios.csv`：保留 demo 的 A/B/C 权重，没有替换成报告 A–E。
-3. `src/engine.py`：已新增 `on_time_available = Σ w × (SD + T+1)`，原 `same_day_available` 保留做诊断指标。
-4. 报告要求的 A–E、central/conservative/optimistic 全量组合模型仍未纳入本次前三项范围。
-5. 当前 demo 组合的 T+1 ceiling 在本组假设下均为 100%，因此 T+1 失败点相同；SD 诊断仍呈现组合差异。
-
-### 一个提醒
-
-口径更新后，92% / 80% / 68% 的同日可用比例和组合收益率保持不变；一工作日可用上限、覆盖率、缺口、失败标记及 Monte Carlo 结果则按 SD+T+1 重新计算。若同日比例仍显示这三个旧值，这是诊断字段，不是口径遗漏。
-
-本轮前三项已完成。后续如需让 demo 与支撑报告的组合分析一致，应另行扩充资产、组合和参数情形；参数扩充后应同步重跑结果并更新图表。
+demo 的 92% / 80% / 68% 是原 A/B/C 的**同日**可用比例；其 SD+T+1 ceiling 仍基于 demo 文件内明示的团队假设，当前均为 100%。报告 A–E 结果不会覆盖或改变 demo 的 CSV、图表或组合标签。

@@ -27,6 +27,8 @@ FTEC5510 Advanced Financial Infrastructure · Group 8
 
 ## 结果图表
 
+> 本仓库也包含报告专用模型 A–E，和本节 demo A/B/C 是两套独立输入。报告模型结果见后文“报告组合复现”。
+
 ### 同日流动性与一工作日上限
 
 ![Demo A/B/C 的同日可用额与 SD+T+1 上限](outputs/portfolio_liquidity_comparison.png)
@@ -47,6 +49,22 @@ FTEC5510 Advanced Financial Infrastructure · Group 8
 
 ![各组合在不同名义冲击下的条件失败概率](outputs/failure_probability_heatmap.png)
 
+## 报告组合复现（A–E）
+
+按《Reserve Portfolio Design》表 2–3 独立录入九类资产、central / conservative / optimistic 三套 SD / T+1 / later 阶梯，以及报告 A–E 权重。该模型与 demo 的 A/B/C 分开保存，不会覆盖 demo 数据。报告表 4 中组合收益率、Central 流动性、Conservative 流动性和资格分类均按报告显示精度复现；五个组合均匹配。近似失败点按报告的 5 个百分点档位复现。
+
+| 报告组合 | 现金占比 | 年化收益率 | Central SD | Central SD+T+1 | Conservative SD | Conservative SD+T+1 | 资格 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| A | 40% | 2.38% | 84.0% | 99.0% | 74.0% | 94.0% | 合规 |
+| B | 20% | 2.89% | 72.0% | 97.0% | 57.0% | 87.0% | 合规 |
+| C | 12% | 3.20% | 38.4% | 82.4% | 25.2% | 56.0% | 合规 |
+| D | 5% | 3.38% | 59.5% | 92.5% | 42.3% | 77.0% | 合规 |
+| E | 5% | 3.75% | 39.0% | 67.5% | 27.5% | 52.5% | 不合规反事实 |
+
+![报告组合 A–E 的流动性与收益率](outputs/report_portfolio_liquidity.png)
+
+`outputs/report_table4_comparison.csv` 提供表 4 每项指标的报告值、复算值及差异；`outputs/report_scenario_results.csv` 是三套情形 × 五组合 × 四档赎回冲击（5/20/50/80%）的确定性结果；`outputs/report_mc_results.csv` 对同一情景矩阵给出每个格子 1,000 次蒙特卡洛结果。Table 2 没有压力折扣参数，复现时不额外加入折扣。表 4 的 Conservative failure point 是报告近似值，按 5 个百分点档位记录；例如 E 的 52.5% T+1 累计值对应报告约 50%。
+
 ## 运行方法
 
 在仓库根目录运行：
@@ -55,10 +73,12 @@ FTEC5510 Advanced Financial Infrastructure · Group 8
 pip install -r requirements.txt
 python -m src.run
 python -m src.plot_results
+python -m src.run_report
+python -m src.plot_report_results
 python -m unittest discover -s tests -v
 ```
 
-`src.run` 会写入 `outputs/results.csv`、`outputs/allocation_results.csv` 和 `outputs/mc_results.csv`；`src.plot_results` 会生成上面的 PNG 图。测试目前共 9 项。
+`src.run` 和 `src.plot_results` 更新 demo 结果；`src.run_report` 与 `src.plot_report_results` 更新报告 A–E 结果及图表。测试目前共 12 项。
 
 ### Streamlit 交互页面
 
@@ -73,6 +93,7 @@ streamlit run app.py
 
 - `data/portfolios.csv` 保存 demo A/B/C 的权重；每个组合权重和必须为 1。
 - `data/params_assets.csv` 保存同日比例、T+1 比例、压力扣减、收益率、来源和说明。
+- `data/report_params_assets.csv` 保存报告九类资产在三种情形下的 SD/T+1/later 阶梯、收益率及资格；`data/report_portfolios.csv` 保存报告 A–E 权重。
 - 原 demo 参数没有 T+1 梯度。本轮把存款和一年内国债未能同日变现的部分，以及隔夜逆回购剩余部分假设为 T+1 可用；这些是团队假设，不是监管参数或实测结算数据。当前每类资产的 SD + T+1 比例合计为 100%，所以三个组合的 T+1 上限均为 100%。
 - 持有人结构 H1/H2/H3 分别占总请求的 50%/30%/20%，只用于展示规则分配差别，不代表真实用户数据。
 - `gov_bond_1y` 的收益率使用金管局 2026-11-17 招标、Y2697（364 天）的平均中标收益率 3.31% 作代理值；[金管局招标结果](https://www.hkma.gov.hk/eng/news-and-media/press-releases/2026/11/20261117-4/)。这替代了此前 HIBOR 1M 占位值。债券/票据收益率只是简化代理，不能视作任一具体持仓的实际回报。
