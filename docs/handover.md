@@ -79,7 +79,7 @@ python -m unittest discover -s tests -v
 
 **归属**：从这一刻起 `src/` 归接手方维护。交接人不再向 `src/` 提交，只负责文档与截图。
 
-## 8. 与《Reserve Portfolio Design》的差异（优先处理）
+## 8. 与《Reserve Portfolio Design》的差异（交接时需知）
 
 `Reserve_Portfolio_Design_Group8.docx` 是储备组合的支撑报告。它规定的是**组合怎么设计**，不是分配规则的回测——分配规则在第 5 节只作为正交维度被提及一次。
 
@@ -94,7 +94,7 @@ python -m unittest discover -s tests -v
 | on-time 口径 | SD + T+1 累计 | 仅同日 |
 | 冲击档位 | 5 / 20 / 50 / 80 | 20 / 40 / 60 / 80 / 100 |
 
-### 最需要先处理的一处：on-time 的口径
+### 需要知道的一处：on-time 的口径
 
 指引第 3.3.3 段要求「收到请求后的一个工作日内处理」。今天收到的请求，最晚可以在下一个工作日完成结算。
 
@@ -102,16 +102,24 @@ python -m unittest discover -s tests -v
 
 也就是说，**现在的模型偏严格**——它假设所有兑付都必须在当天完成。改过来之后，同样组合的覆盖率会变高。
 
-### 建议的改动顺序
+### demo 阶段：不需要改数据
 
-1. `data/params_assets.csv`：扩到支撑报告表 2 的 9 类资产，每类加入 `next_day_ratio` 与 `later_ratio`，并按 central / conservative / optimistic 三套取值。
-2. `data/portfolios.csv`：换成支撑报告表 3 的五组权重（A–E）。
-3. `src/engine.py`：新增 `on_time_available = Σ w × (same_day_ratio + next_day_ratio)`，原 `same_day_available` 保留做诊断指标。
-4. `src/run.py`：在情景矩阵中增加「参数情形」维度，并改为循环三个 case。
-5. `tests/test_engine.py`：92 / 80 / 68 这些断言会全部失效，按新口径重算。
+当前的三组组合、四类资产、单一参数已经足够支撑一次完整的演示：能对比、能算失败点、能出分布。把数据扩到九类资产、五组组合、三套参数属于**报告阶段的完整化工作**，demo 不做也不影响讲述。
+
+如果演示时被问到口径，可以这样回答：
+
+> 我们采用的是更严格的口径，只计当日可成交的部分，所以数字低于支撑报告中 T+1 累计的口径。
+
+### 如果要与支撑报告完全对齐（报告阶段）
+
+按这个顺序做：
+
+1. `src/engine.py`：新增 `on_time_available = Σ w × (same_day_ratio + next_day_ratio)`，原 `same_day_available` 保留做诊断指标。
+2. `data/params_assets.csv`：扩到支撑报告表 2 的 9 类资产，每类加入 `next_day_ratio` 与 `later_ratio`，并按 central / conservative / optimistic 三套取值。
+3. `data/portfolios.csv`：换成支撑报告表 3 的五组权重（A–E）。
+4. `src/run.py`：增加「参数情形」维度，循环三个 case。
+5. `tests/test_engine.py`：92 / 80 / 68 这些断言会失效，按新口径重算。
 
 ### 一个提醒
 
-改完之后，现在文档和截图里的 92% / 80% / 68%、失败概率矩阵、收益率数值**全部会变**。这是口径变化导致的，不是算出错。
-
-如果时间只够做一处，就做第 3 步（on-time 口径）。其余三项是数据层面的事，可以后补；但口径不改，报告里的表 4 和 demo 的结论会对不上。
+如果执行上面的对齐，现在文档和截图里的 92% / 80% / 68%、失败概率矩阵、收益率数值**全部会变**。这是口径变化导致的，不是算出错。
